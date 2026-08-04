@@ -1,0 +1,81 @@
+// Prisma schema
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Post {
+  id         Int      @id @default(autoincrement())
+  title      String
+  slug       String   @unique
+  body       String
+  coverImage String?
+  category   String   @default("IT")
+  published  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Profile {
+  id        Int      @id @default(1)
+  name      String
+  role      String
+  bio       String
+  avatarUrl String?
+  // Short one-liner shown under the name on the hero card
+  tagline   String?
+  location  String?
+  email     String?
+  github    String?
+  linkedin  String?
+  resumeUrl String?
+  updatedAt DateTime @updatedAt
+}
+
+model Skill {
+  id      Int    @id @default(autoincrement())
+  name    String
+  iconUrl String
+  // 0-100, rendered as a segmented RPG stat bar
+  level    Int    @default(70)
+  category String @default("other")
+  order    Int    @default(0)
+}
+
+/// Work history — rendered as the "Work Experience" section.
+model Experience {
+  id      Int     @id @default(autoincrement())
+  company String
+  role    String
+  /// null endDate means this is the current position
+  startDate DateTime
+  endDate   DateTime?
+  summary   String
+  /// One achievement per line
+  highlights String  @default("")
+  /// Comma-separated tech stack
+  tech       String  @default("")
+  /// WORK | FREELANCE | EDUCATION
+  type       String  @default("WORK")
+  order      Int     @default(0)
+}
+
+model Project {
+  id          Int     @id @default(autoincrement())
+  title       String
+  description String
+  imageUrl    String?
+  link        String?
+  /// When all three are filled the project also renders as a "Boss Battle"
+  /// card: the hard problem, how it was solved, and the measured result.
+  problem     String?
+  solution    String?
+  result      String?
+  order       Int     @default(0)
+}

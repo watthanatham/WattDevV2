@@ -1,0 +1,238 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Two site modes share one page: formal (default) and 8-bit (opt-in via the
+ * INSERT COIN toggle). --background/--foreground switch per mode since the
+ * plain <body> uses them everywhere; --panel/--panel-border/--shadow/the
+ * retro accent colors stay fixed to the pixel palette always — they're only
+ * ever used by .pixel-panel/.pixel-btn and the blog, which keep their pixel
+ * look in both modes by design.
+ *
+ * Pixel font is reserved for headings, labels and numbers — body copy stays in
+ * a normal sans so long text remains readable.
+ */
+:root {
+  /* formal (default) */
+  --background: #fafafa;
+  --foreground: #18181b;
+
+  --panel: #ffffff;
+  --panel-border: #1a1a2e;
+  --muted: #6b6b80;
+  --shadow: #1a1a2e;
+
+  /* Retro game palette */
+  --hp: #22c55e;
+  --mp: #3b82f6;
+  --xp: #fbbf24;
+  --dmg: #ef4444;
+  --magic: #a855f7;
+}
+
+.dark {
+  --background: #09090b;
+  --foreground: #f4f4f5;
+
+  /* Dark-mode pixel palette — applies to .pixel-panel/.pixel-btn/blog
+     regardless of formal/game mode, so they never render as stray white
+     cards on a dark page. */
+  --panel: #1e1e2e;
+  --panel-border: #4a4a6a;
+  --muted: #9a9ab0;
+  --shadow: #000000;
+}
+
+html[data-mode="game"] {
+  --background: #f4f1e8;
+  --foreground: #1a1a2e;
+}
+
+html[data-mode="game"].dark {
+  --background: #12121c;
+  --foreground: #e8e8f0;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-panel: var(--panel);
+  --color-panel-border: var(--panel-border);
+  --color-muted: var(--muted);
+  --color-hp: var(--hp);
+  --color-mp: var(--mp);
+  --color-xp: var(--xp);
+  --color-dmg: var(--dmg);
+  --color-magic: var(--magic);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-pixel: var(--font-pixel);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/* Faint pixel grid so flat areas read as "game screen" — game mode only. */
+html[data-mode="game"] body {
+  background-image:
+    linear-gradient(rgba(127, 127, 160, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(127, 127, 160, 0.06) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+@layer base {
+  ::selection {
+    @apply bg-magic/30;
+  }
+}
+
+@layer components {
+  /* ---- Pixel typography ---- */
+  .font-pixel {
+    font-family: var(--font-pixel), monospace;
+    /* Press Start 2P runs large and tight; loosen it up for legibility */
+    letter-spacing: 0.02em;
+    line-height: 1.6;
+  }
+
+  /* ---- Panel: the core "game UI box" ---- */
+  .pixel-panel {
+    background: var(--panel);
+    border: 3px solid var(--panel-border);
+    box-shadow: 5px 5px 0 0 var(--shadow);
+  }
+
+  .pixel-panel-sm {
+    background: var(--panel);
+    border: 2px solid var(--panel-border);
+    box-shadow: 3px 3px 0 0 var(--shadow);
+  }
+
+  /* ---- Buttons: physically depress on click ---- */
+  .pixel-btn {
+    font-family: var(--font-pixel), monospace;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 3px solid var(--panel-border);
+    box-shadow: 4px 4px 0 0 var(--shadow);
+    transition:
+      transform 80ms steps(2),
+      box-shadow 80ms steps(2);
+  }
+
+  .pixel-btn:hover {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 0 var(--shadow);
+  }
+
+  .pixel-btn:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0 0 0 0 var(--shadow);
+  }
+
+  /* ---- Segmented stat bar (HP/MP style) ---- */
+  .stat-track {
+    background: color-mix(in srgb, var(--foreground) 12%, transparent);
+    border: 2px solid var(--panel-border);
+    height: 1.25rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-fill {
+    height: 100%;
+    /* Notches every 10px make the bar read as discrete blocks */
+    background-image: repeating-linear-gradient(
+      90deg,
+      currentColor 0 8px,
+      color-mix(in srgb, currentColor 75%, #000) 8px 10px
+    );
+  }
+
+  /* ---- Blinking cursor / prompt ---- */
+  .blink {
+    animation: blink 1s steps(2, start) infinite;
+  }
+
+  /* ---- Idle bob for sprites ---- */
+  .sprite-bob {
+    animation: bob 1.6s steps(2, end) infinite;
+  }
+}
+
+@keyframes blink {
+  to {
+    visibility: hidden;
+  }
+}
+
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blink,
+  .sprite-bob {
+    animation: none;
+  }
+}
+
+/* ---- Markdown body (blog posts) ---- */
+.prose-content h1,
+.prose-content h2,
+.prose-content h3 {
+  font-family: var(--font-pixel), monospace;
+  @apply mt-8 mb-4 scroll-mt-24 leading-relaxed;
+}
+.prose-content h1 {
+  @apply text-xl;
+}
+.prose-content h2 {
+  @apply text-lg;
+}
+.prose-content h3 {
+  @apply text-base;
+}
+.prose-content p {
+  @apply mb-4 leading-relaxed;
+}
+.prose-content a {
+  @apply text-mp underline underline-offset-2 hover:text-magic;
+}
+.prose-content ul,
+.prose-content ol {
+  @apply mb-4 ml-6 list-outside space-y-1;
+}
+.prose-content ul {
+  @apply list-disc;
+}
+.prose-content ol {
+  @apply list-decimal;
+}
+.prose-content img {
+  @apply my-6 border-[3px] border-panel-border;
+}
+.prose-content blockquote {
+  @apply border-l-4 border-xp bg-xp/10 py-2 pl-4 italic text-muted my-4;
+}
+.prose-content code {
+  @apply bg-foreground/10 px-1.5 py-0.5 text-sm;
+  font-family: var(--font-geist-mono), monospace;
+}
+.prose-content pre {
+  @apply bg-[#1a1a2e] text-[#e8e8f0] border-[3px] border-panel-border p-4 overflow-x-auto my-4;
+}
+.prose-content pre code {
+  @apply bg-transparent p-0;
+}
