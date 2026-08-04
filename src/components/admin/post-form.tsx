@@ -1,14 +1,12 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState } from "react";
 import type { PostFormState } from "@/lib/actions/posts";
-import { MarkdownContent } from "@/components/markdown-content";
+import { RichEditor } from "@/components/admin/editor/rich-editor";
+import { BLOG_CATEGORIES } from "@/lib/blog";
 
-const CATEGORIES = [
-  { value: "IT", label: "Technology" },
-  { value: "PTG", label: "Photography" },
-  { value: "LS", label: "Life styles" },
-];
+const inputClass =
+  "w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800";
 
 export function PostForm({
   action,
@@ -19,15 +17,15 @@ export function PostForm({
   initial?: {
     title: string;
     body: string;
+    excerpt: string | null;
     category: string;
+    tags: string[];
     published: boolean;
     coverImage: string | null;
   };
   submitLabel: string;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
-  const [body, setBody] = useState(initial?.body ?? "");
-  const [preview, setPreview] = useState(false);
 
   return (
     <form action={formAction} className="space-y-5">
@@ -38,19 +36,34 @@ export function PostForm({
           name="title"
           required
           defaultValue={initial?.title}
-          className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800"
+          className={inputClass}
         />
       </div>
 
-      <div className="flex gap-4">
+      <div>
+        <label className="mb-1 block text-sm font-medium">
+          เกริ่น (excerpt)
+        </label>
+        <p className="mb-1.5 text-xs text-zinc-500">
+          สรุปสั้นๆ 1–2 ประโยค แสดงบนการ์ดหน้า blog และใช้เป็น description
+        </p>
+        <textarea
+          name="excerpt"
+          rows={2}
+          defaultValue={initial?.excerpt ?? ""}
+          className={inputClass}
+        />
+      </div>
+
+      <div className="flex flex-wrap gap-4">
         <div className="flex-1">
           <label className="mb-1 block text-sm font-medium">หมวดหมู่</label>
           <select
             name="category"
-            defaultValue={initial?.category ?? "IT"}
-            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800"
+            defaultValue={initial?.category ?? "Street"}
+            className={inputClass}
           >
-            {CATEGORIES.map((c) => (
+            {BLOG_CATEGORIES.map((c) => (
               <option key={c.value} value={c.value}>
                 {c.label}
               </option>
@@ -71,6 +84,18 @@ export function PostForm({
       </div>
 
       <div>
+        <label className="mb-1 block text-sm font-medium">แท็ก</label>
+        <p className="mb-1.5 text-xs text-zinc-500">คั่นด้วย , เช่น bangkok, 35mm, bw</p>
+        <input
+          type="text"
+          name="tags"
+          defaultValue={initial?.tags.join(", ")}
+          placeholder="bangkok, 35mm, bw"
+          className={inputClass}
+        />
+      </div>
+
+      <div>
         <label className="mb-1 block text-sm font-medium">
           รูปปก {initial?.coverImage && "(อัปโหลดใหม่เพื่อแทนที่รูปเดิม)"}
         </label>
@@ -83,32 +108,8 @@ export function PostForm({
       </div>
 
       <div>
-        <div className="mb-1 flex items-center justify-between">
-          <label className="block text-sm font-medium">
-            เนื้อหา (Markdown)
-          </label>
-          <button
-            type="button"
-            onClick={() => setPreview((p) => !p)}
-            className="text-xs font-medium text-indigo-500 hover:text-indigo-400"
-          >
-            {preview ? "แก้ไข" : "ดูตัวอย่าง"}
-          </button>
-        </div>
-        {preview ? (
-          <div className="min-h-64 rounded-lg border border-zinc-300 px-4 py-3 dark:border-zinc-700">
-            <MarkdownContent content={body} />
-          </div>
-        ) : (
-          <textarea
-            name="body"
-            required
-            rows={16}
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            className="w-full rounded-lg border border-zinc-300 px-3 py-2 font-mono text-sm focus:border-indigo-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800"
-          />
-        )}
+        <label className="mb-1 block text-sm font-medium">เนื้อหา</label>
+        <RichEditor initialHTML={initial?.body ?? ""} name="body" />
       </div>
 
       {state?.error && <p className="text-sm text-red-500">{state.error}</p>}

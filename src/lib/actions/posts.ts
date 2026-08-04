@@ -9,6 +9,25 @@ import { slugify } from "@/lib/slugify";
 
 export type PostFormState = { error?: string } | undefined;
 
+/** True when the editor HTML has no real content (empty `<p></p>`, no images). */
+function isEmptyHtml(html: string): boolean {
+  const hasImage = /<img\b/i.test(html);
+  const text = html.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim();
+  return !hasImage && text.length === 0;
+}
+
+/** Comma-separated tag input → clean, de-duplicated string array. */
+function parseTags(raw: FormDataEntryValue | null): string[] {
+  return [
+    ...new Set(
+      String(raw ?? "")
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean)
+    ),
+  ];
+}
+
 async function uniqueSlug(base: string, ignoreId?: number) {
   const slugBase = slugify(base) || `post-${Date.now()}`;
   let slug = slugBase;
@@ -49,11 +68,13 @@ export async function createPost(
 
   const title = String(formData.get("title") ?? "").trim();
   const body = String(formData.get("body") ?? "");
-  const category = String(formData.get("category") ?? "IT");
+  const category = String(formData.get("category") ?? "Street");
+  const excerpt = String(formData.get("excerpt") ?? "").trim() || null;
+  const tags = parseTags(formData.get("tags"));
   const published = formData.get("published") === "on";
   const photo = formData.get("photo") as File | null;
 
-  if (!title || !body) {
+  if (!title || isEmptyHtml(body)) {
     return { error: "กรุณากรอกชื่อเรื่องและเนื้อหา" };
   }
 
@@ -67,7 +88,7 @@ export async function createPost(
   const slug = await uniqueSlug(title);
 
   await prisma.post.create({
-    data: { title, slug, body, category, published, coverImage },
+    data: { title, slug, body, category, excerpt, tags, published, coverImage },
   });
 
   revalidatePath("/blog");
@@ -84,11 +105,13 @@ export async function updatePost(
 
   const title = String(formData.get("title") ?? "").trim();
   const body = String(formData.get("body") ?? "");
-  const category = String(formData.get("category") ?? "IT");
+  const category = String(formData.get("category") ?? "Street");
+  const excerpt = String(formData.get("excerpt") ?? "").trim() || null;
+  const tags = parseTags(formData.get("tags"));
   const published = formData.get("published") === "on";
   const photo = formData.get("photo") as File | null;
 
-  if (!title || !body) {
+  if (!title || isEmptyHtml(body)) {
     return { error: "กรุณากรอกชื่อเรื่องและเนื้อหา" };
   }
 
@@ -109,7 +132,7 @@ export async function updatePost(
 
   await prisma.post.update({
     where: { id },
-    data: { title, slug, body, category, published, coverImage },
+    data: { title, slug, body, category, excerpt, tags, published, coverImage },
   });
 
   revalidatePath("/blog");

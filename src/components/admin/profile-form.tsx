@@ -14,6 +14,9 @@ type Profile = {
   github: string | null;
   linkedin: string | null;
   resumeUrl: string | null;
+  penName: string | null;
+  penBio: string | null;
+  penAvatarUrl: string | null;
 };
 
 const inputClass =
@@ -137,6 +140,44 @@ export function ProfileForm({ initial }: { initial: Profile | null }) {
       >
         <input type="file" name="avatar" accept="image/*" className="w-full text-sm" />
       </Field>
+
+      {/* Blog author identity */}
+      <div className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
+        <p className="text-sm font-semibold">นามปากกา (สำหรับ Blog)</p>
+        <p className="mt-1 mb-4 text-xs text-zinc-500">
+          ชื่อ + bio + รูป ที่จะแสดงเป็นผู้เขียนในหน้า Blog (ถ้าเว้นว่าง จะใช้ชื่อจริง)
+        </p>
+        <div className="space-y-4">
+          <Field label="ชื่อนามปากกา">
+            <input
+              type="text"
+              name="penName"
+              defaultValue={initial?.penName ?? ""}
+              placeholder="เช่น WATT.STUDIO"
+              className={inputClass}
+            />
+          </Field>
+          <Field label="Bio นามปากกา" hint="แสดงใต้ชื่อบนหน้า Journal">
+            <textarea
+              name="penBio"
+              rows={2}
+              defaultValue={initial?.penBio ?? ""}
+              placeholder="Street, portrait & fashion photography."
+              className={inputClass}
+            />
+          </Field>
+          <Field
+            label={`รูปนามปากกา${initial?.penAvatarUrl ? " (อัปโหลดใหม่เพื่อแทนที่)" : ""}`}
+          >
+            <input
+              type="file"
+              name="penAvatar"
+              accept="image/*"
+              className="w-full text-sm"
+            />
+          </Field>
+        </div>
+      </div>
 
       {state?.error && <p className="text-sm text-red-500">{state.error}</p>}
       {state?.success && (

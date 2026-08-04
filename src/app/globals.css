@@ -236,3 +236,135 @@ html[data-mode="game"] body {
 .prose-content pre code {
   @apply bg-transparent p-0;
 }
+
+/* ---- Blog article body: clean editorial typography (no 8-bit) ---- */
+.blog-prose {
+  @apply text-[1.075rem] leading-8 text-zinc-700 dark:text-zinc-300;
+}
+.blog-prose h2 {
+  @apply mt-12 mb-4 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100;
+}
+.blog-prose h3 {
+  @apply mt-10 mb-3 text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100;
+}
+.blog-prose p {
+  @apply my-6;
+}
+.blog-prose a {
+  @apply text-zinc-900 underline decoration-zinc-300 underline-offset-4 transition hover:decoration-zinc-900 dark:text-zinc-100 dark:decoration-zinc-600 dark:hover:decoration-zinc-100;
+}
+.blog-prose ul,
+.blog-prose ol {
+  @apply my-6 ml-6 list-outside space-y-2;
+}
+.blog-prose ul {
+  @apply list-disc;
+}
+.blog-prose ol {
+  @apply list-decimal;
+}
+.blog-prose blockquote {
+  @apply my-8 border-l-2 border-zinc-900 pl-6 text-xl italic text-zinc-600 dark:border-zinc-100 dark:text-zinc-400;
+}
+.blog-prose code {
+  @apply rounded bg-zinc-100 px-1.5 py-0.5 text-[0.9em] dark:bg-zinc-800;
+  font-family: var(--font-geist-mono), monospace;
+}
+.blog-prose pre {
+  @apply my-8 overflow-x-auto rounded-xl bg-zinc-900 p-5 text-sm text-zinc-100;
+}
+.blog-prose pre code {
+  @apply bg-transparent p-0;
+}
+/* Full-bleed-ish images with a subtle frame; captions come from alt text */
+.blog-prose figure {
+  @apply my-10;
+}
+.blog-prose figure img,
+.blog-prose > p > img,
+.blog-prose > img {
+  @apply w-full cursor-zoom-in rounded-lg;
+}
+.blog-prose figure figcaption {
+  @apply mt-3 text-center text-sm text-zinc-400;
+}
+/* Image width variants set by the editor (data-width) — "wide" and "full"
+   break out of the centered text column. */
+.blog-prose figure[data-width="wide"] {
+  @apply w-screen max-w-[64rem];
+  margin-left: 50%;
+  transform: translateX(-50%);
+}
+.blog-prose figure[data-width="full"] {
+  width: 100vw;
+  margin-left: 50%;
+  transform: translateX(-50%);
+}
+.blog-prose figure[data-width="full"] img {
+  @apply rounded-none;
+}
+/* Multi-image gallery: responsive grid that breaks out wider than the text. */
+.blog-prose [data-gallery] {
+  @apply my-10 grid gap-2;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  width: 100%;
+  max-width: 64rem;
+  margin-left: 50%;
+  transform: translateX(-50%);
+}
+.blog-prose [data-gallery] img {
+  @apply h-full w-full cursor-zoom-in rounded-lg object-cover;
+  aspect-ratio: 1 / 1;
+}
+
+/* ---- Tiptap editing surface ---- */
+.editor-body {
+  @apply min-h-[24rem] px-5 py-4 text-base leading-8 text-zinc-800 dark:text-zinc-200;
+}
+.editor-body:focus {
+  @apply outline-none;
+}
+.editor-body h2 {
+  @apply mt-6 mb-2 text-2xl font-bold;
+}
+.editor-body h3 {
+  @apply mt-5 mb-2 text-xl font-semibold;
+}
+.editor-body p {
+  @apply my-3;
+}
+.editor-body ul {
+  @apply my-3 ml-6 list-disc space-y-1;
+}
+.editor-body ol {
+  @apply my-3 ml-6 list-decimal space-y-1;
+}
+.editor-body blockquote {
+  @apply my-4 border-l-2 border-zinc-300 pl-4 italic text-zinc-500 dark:border-zinc-600;
+}
+.editor-body img {
+  @apply my-3 max-w-full rounded-lg;
+}
+.editor-body img.ProseMirror-selectednode {
+  @apply outline outline-2 outline-indigo-500;
+}
+.editor-body img[data-width="wide"],
+.editor-body img[data-width="full"] {
+  @apply w-full;
+}
+.editor-body [data-gallery] {
+  @apply my-3 grid gap-2;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+}
+.editor-body [data-gallery] img {
+  @apply m-0 h-full w-full rounded-lg object-cover;
+  aspect-ratio: 1 / 1;
+}
+.editor-body [data-gallery].ProseMirror-selectednode {
+  @apply outline outline-2 outline-indigo-500;
+}
+/* Placeholder text for the empty editor */
+.editor-body p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  @apply pointer-events-none float-left h-0 text-zinc-400;
+}

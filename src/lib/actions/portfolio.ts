@@ -37,6 +37,7 @@ export async function updateProfile(
   const bio = String(formData.get("bio") ?? "").trim();
   const avatar = formData.get("avatar") as File | null;
   const resume = formData.get("resume") as File | null;
+  const penAvatar = formData.get("penAvatar") as File | null;
 
   const optional = (key: string) =>
     String(formData.get(key) ?? "").trim() || null;
@@ -46,6 +47,8 @@ export async function updateProfile(
   const email = optional("email");
   const github = optional("github");
   const linkedin = optional("linkedin");
+  const penName = optional("penName");
+  const penBio = optional("penBio");
 
   if (!name || !role || !bio) {
     return { error: "กรุณากรอกข้อมูลให้ครบ" };
@@ -57,6 +60,7 @@ export async function updateProfile(
 
   let avatarUrl: string | undefined;
   let resumeUrl: string | undefined;
+  let penAvatarUrl: string | undefined;
   try {
     if (avatar && avatar.size > 0) {
       avatarUrl = (await uploadFile(avatar, "profile", "อัปโหลดรูปไม่สำเร็จ")) ?? undefined;
@@ -64,23 +68,39 @@ export async function updateProfile(
     if (resume && resume.size > 0) {
       resumeUrl = (await uploadFile(resume, "resume", "อัปโหลดเรซูเม่ไม่สำเร็จ")) ?? undefined;
     }
+    if (penAvatar && penAvatar.size > 0) {
+      penAvatarUrl = (await uploadFile(penAvatar, "pen", "อัปโหลดรูปนามปากกาไม่สำเร็จ")) ?? undefined;
+    }
   } catch (e) {
     return { error: e instanceof Error ? e.message : "อัปโหลดไฟล์ไม่สำเร็จ" };
   }
 
-  const fields = { name, role, bio, tagline, location, email, github, linkedin };
+  const fields = {
+    name,
+    role,
+    bio,
+    tagline,
+    location,
+    email,
+    github,
+    linkedin,
+    penName,
+    penBio,
+  };
 
   await prisma.profile.upsert({
     where: { id: 1 },
-    create: { id: 1, ...fields, avatarUrl, resumeUrl },
+    create: { id: 1, ...fields, avatarUrl, resumeUrl, penAvatarUrl },
     update: {
       ...fields,
       ...(avatarUrl ? { avatarUrl } : {}),
       ...(resumeUrl ? { resumeUrl } : {}),
+      ...(penAvatarUrl ? { penAvatarUrl } : {}),
     },
   });
 
   revalidatePath("/");
+  revalidatePath("/blog", "layout");
   revalidatePath("/admin/portfolio");
   return { success: true };
 }

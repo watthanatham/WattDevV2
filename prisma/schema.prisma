@@ -15,8 +15,13 @@ model Post {
   title      String
   slug       String   @unique
   body       String
+  /// Short teaser shown on the blog index cards and used as the meta description
+  excerpt    String?
   coverImage String?
-  category   String   @default("IT")
+  /// Street | Portrait | Fashion | General
+  category   String   @default("Street")
+  /// Free-form tags (Postgres text[])
+  tags       String[] @default([])
   published  Boolean  @default(false)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -35,6 +40,10 @@ model Profile {
   github    String?
   linkedin  String?
   resumeUrl String?
+  // Blog author identity (pen name) — one global author for all posts
+  penName   String?
+  penBio    String?
+  penAvatarUrl String?
   updatedAt DateTime @updatedAt
 }
 
