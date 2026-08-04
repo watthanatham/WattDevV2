@@ -85,31 +85,58 @@ export async function updateProfile(
   return { success: true };
 }
 
-export async function addSkill(formData: FormData) {
+export async function addSkill(
+  _prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
   await verifySession();
   const name = String(formData.get("name") ?? "").trim();
-  const iconUrl = String(formData.get("iconUrl") ?? "").trim();
   const category = String(formData.get("category") ?? "other").trim();
-  const level = Math.max(0, Math.min(100, Number(formData.get("level")) || 70));
-  if (!name || !iconUrl) return;
+  const icon = formData.get("icon") as File | null;
+
+  if (!name) return { error: "กรุณากรอกชื่อ skill" };
+  if (!icon || icon.size === 0) return { error: "กรุณาเลือกไฟล์ไอคอน" };
+
+  let iconUrl: string | null = null;
+  try {
+    iconUrl = await uploadFile(icon, "skills", "อัปโหลดไอคอนไม่สำเร็จ");
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "อัปโหลดไอคอนไม่สำเร็จ" };
+  }
+  if (!iconUrl) return { error: "อัปโหลดไอคอนไม่สำเร็จ" };
 
   const last = await prisma.skill.findFirst({ orderBy: { order: "desc" } });
   await prisma.skill.create({
-    data: { name, iconUrl, category, level, order: (last?.order ?? 0) + 1 },
+    data: { name, iconUrl, category, order: (last?.order ?? 0) + 1 },
   });
 
   revalidatePath("/");
   revalidatePath("/admin/portfolio");
+  return { success: true };
 }
 
-/** Inline level tweak from the skills list. */
-export async function updateSkillLevel(formData: FormData) {
+/** Replace an existing skill's icon by uploading a new file. */
+export async function updateSkillIcon(
+  id: number,
+  _prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
   await verifySession();
-  const id = Number(formData.get("id"));
-  const level = Math.max(0, Math.min(100, Number(formData.get("level")) || 0));
-  await prisma.skill.update({ where: { id }, data: { level } });
+  const icon = formData.get("icon") as File | null;
+  if (!icon || icon.size === 0) return { error: "กรุณาเลือกไฟล์ไอคอน" };
+
+  let iconUrl: string | null = null;
+  try {
+    iconUrl = await uploadFile(icon, "skills", "อัปโหลดไอคอนไม่สำเร็จ");
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "อัปโหลดไอคอนไม่สำเร็จ" };
+  }
+  if (!iconUrl) return { error: "อัปโหลดไอคอนไม่สำเร็จ" };
+
+  await prisma.skill.update({ where: { id }, data: { iconUrl } });
   revalidatePath("/");
   revalidatePath("/admin/portfolio");
+  return { success: true };
 }
 
 export async function deleteSkill(formData: FormData) {

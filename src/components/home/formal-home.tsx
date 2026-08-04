@@ -32,7 +32,7 @@ export function FormalHome({
 
       <FormalExperience experiences={experiences} />
 
-      <FormalSkills skills={skills} experiences={experiences} />
+      <FormalSkills skills={skills} />
 
       <FormalCaseStudies caseStudies={caseStudies} />
 

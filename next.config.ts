@@ -22,12 +22,15 @@ const nextConfig: NextConfig = {
     // Node's crypto-backed sha256 avoids WASM entirely.
     config.output.hashFunction = "sha256";
 
-    // On that same WASM fallback path, webpack's persistent filesystem cache
-    // deserialises entries with undefined content, so a *second* production
-    // build over a warm .next dies in hash.update(). A clean build always
-    // works, so skip the cache for local prod builds. Vercel builds on Linux
-    // with working native bindings, so it keeps full caching.
-    if (!dev && !process.env.VERCEL) {
+    // Webpack's persistent filesystem cache corrupts under this setup: a build
+    // that *restores* a warm cache dies with
+    //   TypeError: The "data" argument must be ... Received undefined
+    // inside hash.update(). It bites on any second build over a warm cache —
+    // locally over .next AND on Vercel once it restores the cache it saved from
+    // the previous deploy (the first, cold deploy always passes, hiding it).
+    // A cold build always works, so disable the persistent cache for every
+    // production build. Costs a few seconds on a ~1min build; buys reliability.
+    if (!dev) {
       config.cache = false;
     }
 

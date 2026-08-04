@@ -54,3 +54,6 @@ legacy-django/media
 legacy-django/staticfiles
 
 /src/generated/prisma
+
+.vercel
+.env*

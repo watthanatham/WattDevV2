@@ -1,5 +1,4 @@
-import { deriveSkillExperience } from "@/lib/skill-experience";
-import type { HomeSkill, HomeExperience } from "@/components/home/types";
+import type { HomeSkill } from "@/components/home/types";
 
 const CATEGORY_LABEL: Record<string, string> = {
   frontend: "Frontend",
@@ -19,13 +18,7 @@ const CATEGORY_ORDER = [
   "other",
 ];
 
-export function FormalSkills({
-  skills,
-  experiences,
-}: {
-  skills: HomeSkill[];
-  experiences: HomeExperience[];
-}) {
+export function FormalSkills({ skills }: { skills: HomeSkill[] }) {
   if (skills.length === 0) return null;
 
   const grouped = new Map<string, HomeSkill[]>();
@@ -37,10 +30,7 @@ export function FormalSkills({
 
   return (
     <section>
-      <h2 className="mb-1 text-xl font-bold tracking-tight">Skills</h2>
-      <p className="mb-6 text-sm text-zinc-500">
-        Duration reflects real project usage, not a self-rating.
-      </p>
+      <h2 className="mb-6 text-xl font-bold tracking-tight">Skills</h2>
 
       <div className="grid gap-4 sm:grid-cols-2">
         {categories.map((category) => (
@@ -51,33 +41,22 @@ export function FormalSkills({
             <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">
               {CATEGORY_LABEL[category]}
             </p>
-            <ul className="space-y-2">
-              {grouped.get(category)!.map((skill) => {
-                const exp = deriveSkillExperience(skill.name, experiences);
-                return (
-                  <li
-                    key={skill.id}
-                    className="flex items-center justify-between gap-3 text-sm"
-                  >
-                    <span className="flex items-center gap-2">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={skill.iconUrl}
-                        alt=""
-                        className="size-4 object-contain"
-                      />
-                      {skill.name}
-                    </span>
-                    {exp && (
-                      <span className="whitespace-nowrap text-xs text-zinc-400">
-                        {exp.years}+ yr{exp.years > 1 ? "s" : ""}
-                        {exp.current ? " · current" : ""}
-                      </span>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
+            <div className="flex flex-wrap gap-2">
+              {grouped.get(category)!.map((skill) => (
+                <span
+                  key={skill.id}
+                  className="flex items-center gap-1.5 rounded-full border border-zinc-200 py-1 pl-1.5 pr-3 text-sm dark:border-zinc-700"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={skill.iconUrl}
+                    alt=""
+                    className="size-5 object-contain"
+                  />
+                  {skill.name}
+                </span>
+              ))}
+            </div>
           </div>
         ))}
       </div>

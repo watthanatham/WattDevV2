@@ -93,11 +93,51 @@ npm run setup:storage
 
 ## 6. Deploy ขึ้น Vercel (ฟรี)
 
-1. Push โค้ดขึ้น GitHub
-2. ไปที่ https://vercel.com → **New Project** → เลือก repo นี้
-3. ใส่ Environment Variables ให้ครบ (`DATABASE_URL`, `DIRECT_URL`, `NEXT_PUBLIC_SUPABASE_URL`,
-   `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET`)
-4. กด **Deploy**
+โปรเจคนี้ deploy ผ่าน **Vercel CLI** ตรงๆ ได้เลย ไม่ต้องต่อ GitHub:
+
+```bash
+vercel login          # ครั้งแรกครั้งเดียว
+vercel link --yes --project watt-dev
+vercel --prod --yes
+```
+
+หรือจะใช้วิธี push ขึ้น GitHub แล้วกด **New Project** ใน vercel.com ก็ได้ (ได้ auto-deploy
+ทุกครั้งที่ push เป็นของแถม)
+
+ไม่ว่าจะวิธีไหน ต้องใส่ Environment Variables ให้ครบ 5 ตัว: `DATABASE_URL`, `DIRECT_URL`,
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+`NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET`
+
+### ⚠️ กับดักสำคัญ: `DIRECT_URL` บน Vercel ต้องไม่ใช่ direct connection
+
+ถ้าใส่ direct connection (`db.<ref>.supabase.co:5432`) เป็น `DIRECT_URL` บน Vercel
+build จะพังด้วย:
+
+```
+Error: P1001: Can't reach database server at db.<ref>.supabase.co:5432
+```
+
+**สาเหตุ:** direct connection ของ Supabase free tier เป็น **IPv6-only** แต่ build machine
+ของ Vercel เป็น IPv4 จึงต่อไม่ถึง
+
+**วิธีแก้:** บน Vercel ให้ตั้ง `DIRECT_URL` เป็น **Session pooler** — host เดียวกับ pooler
+แต่ใช้ port **5432** (ไม่ใช่ 6543):
+
+```
+postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres
+```
+
+Session pooler เป็น IPv4 และรองรับ advisory lock ที่ `prisma migrate deploy` ต้องใช้
+(ต่างจาก transaction pooler port 6543 ที่ไม่รองรับ)
+
+> ในเครื่องตัวเองยังใช้ direct connection ต่อไปได้ตามปกติ — และ**ควรใช้** เพราะ
+> `prisma migrate dev` ต้องสร้าง shadow database ซึ่งทำผ่าน pooler ไม่ได้
+
+### ตั้ง region ให้ตรงกับ Supabase
+
+`vercel.json` ตั้ง `"regions": ["hnd1"]` (โตเกียว) ไว้ให้ตรงกับ Supabase ที่อยู่
+`ap-northeast-1` ถ้าย้าย Supabase ไป region อื่น อย่าลืมแก้ตรงนี้ด้วย ไม่งั้นทุก query
+จะวิ่งข้ามทวีปทำให้เว็บช้า
 
 เท่านี้เว็บก็จะขึ้นออนไลน์ พร้อมระบบแก้ไขข้อมูลผ่านหน้า `/admin` ✅
 
@@ -119,10 +159,9 @@ npm run setup:storage
 2. `next.config.ts` ตั้ง `config.output.hashFunction = "sha256"` เพราะ hash แบบ
    `xxhash64` ของ webpack ใช้ WebAssembly ซึ่งพังในสภาพแวดล้อมเดียวกันนี้
    (build จะตายด้วย `TypeError ... at WasmHash._updateWithBuffer`)
-3. `next.config.ts` ปิด webpack filesystem cache เฉพาะตอน build ในเครื่อง เพราะบน
-   WASM fallback ตัว cache จะอ่านค่ากลับมาเป็น `undefined` ทำให้ build **รอบที่สอง**
-   ตายด้วย `TypeError: The "data" argument must be of type string...`
-   (รอบแรกผ่าน เพราะยังไม่มี cache — อาการนี้หลอกง่ายมาก)
-
-ทั้งสามอย่างไม่กระทบตอน deploy บน Vercel (ที่นั่นใช้ native bindings ได้ปกติ และยังได้
-cache เต็มรูปแบบ เพราะเงื่อนไขเช็ค `process.env.VERCEL` ไว้แล้ว)
+3. `next.config.ts` ปิด webpack filesystem cache สำหรับ **ทุก** production build
+   (ทั้งในเครื่องและบน Vercel) เพราะ cache จะอ่านค่ากลับมาเป็น `undefined` ทำให้ build
+   **ที่กู้ cache อุ่นๆ** ตายด้วย `TypeError: The "data" argument must be of type string...`
+   — เกิดทั้งตอน build รอบสองในเครื่อง และบน Vercel ตอน deploy รอบสองที่กู้ cache จาก
+   deploy ก่อนกลับมา (deploy รอบแรกผ่านเสมอเพราะยังไม่มี cache — อาการนี้หลอกง่ายมาก)
+   เสีย cache ไปแลกความเสถียร คุ้มกว่า เพราะ build ใช้เวลาแค่ ~1 นาที

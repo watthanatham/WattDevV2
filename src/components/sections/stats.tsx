@@ -1,11 +1,9 @@
 import { SectionTitle } from "@/components/pixel/panel";
-import { StatBar } from "@/components/pixel/stat-bar";
 
 type Skill = {
   id: number;
   name: string;
   iconUrl: string;
-  level: number;
   category: string;
 };
 
@@ -30,7 +28,7 @@ const CATEGORY_ORDER = [
 export function Stats({ skills }: { skills: Skill[] }) {
   if (skills.length === 0) return null;
 
-  // Group by category so the stat panel reads like a character sheet
+  // Group by category so the panel reads like a character sheet
   const grouped = new Map<string, Skill[]>();
   for (const skill of skills) {
     const key = skill.category || "other";
@@ -43,7 +41,7 @@ export function Stats({ skills }: { skills: Skill[] }) {
 
   return (
     <section>
-      <SectionTitle accent="text-hp">STATS</SectionTitle>
+      <SectionTitle accent="text-hp">SKILLS</SectionTitle>
 
       <div className="grid gap-5 sm:grid-cols-2">
         {categories.map((category) => (
@@ -51,42 +49,24 @@ export function Stats({ skills }: { skills: Skill[] }) {
             <p className="font-pixel mb-4 text-[9px] text-muted">
               {CATEGORY_LABEL[category]}
             </p>
-            <div className="space-y-3.5">
+            <div className="flex flex-wrap gap-2">
               {grouped.get(category)!.map((skill) => (
-                <StatBar
+                <span
                   key={skill.id}
-                  label={skill.name}
-                  level={skill.level}
-                  category={skill.category}
-                />
+                  className="flex items-center gap-2 border-2 border-panel-border bg-foreground/5 px-2.5 py-1.5"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={skill.iconUrl}
+                    alt=""
+                    className="size-4 object-contain"
+                  />
+                  <span className="font-pixel text-[9px]">{skill.name}</span>
+                </span>
               ))}
             </div>
           </div>
         ))}
-      </div>
-
-      {/* Inventory grid */}
-      <div className="pixel-panel mt-5 p-5">
-        <p className="font-pixel mb-4 text-[9px] text-muted">INVENTORY</p>
-        <div className="flex flex-wrap gap-3">
-          {skills.map((skill) => (
-            <div
-              key={skill.id}
-              title={`${skill.name} — LV.${skill.level}`}
-              className="group relative flex size-12 items-center justify-center border-2 border-panel-border bg-foreground/5 p-2 transition-transform hover:-translate-y-1"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={skill.iconUrl}
-                alt={skill.name}
-                className="size-full object-contain"
-              />
-              <span className="font-pixel pointer-events-none absolute -bottom-7 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap border-2 border-panel-border bg-panel px-1.5 py-1 text-[8px] opacity-0 transition-opacity group-hover:opacity-100">
-                {skill.name}
-              </span>
-            </div>
-          ))}
-        </div>
       </div>
     </section>
   );
